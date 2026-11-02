@@ -1,0 +1,26 @@
+---
+description: Draft a bug report in the project's conventions and create it in the issue tracker after the user approves. Use when the user wants to file, log or write up a bug, or when /qua:bug-report is run.
+---
+
+# /qua:bug-report
+
+Turn what the user describes into a bug report that follows the project's conventions. The text after the command is the bug description. If it is empty, ask what the bug is.
+
+## Rules
+
+- If Qua tools are missing, stop and point the user to /qua:init.
+- Call `qua_project_get()` first. If `configured` is false, stop and tell the user to run `/qua:init`.
+- Never write to the issue tracker before an explicit yes to the full draft shown in chat.
+- Never edit `.qua/project.yaml` and never handle secrets.
+
+## Steps
+
+1. Read `.qua/conventions/bug-report.md`. If it does not exist, say so, suggest `/qua:init`, and stop. You may still print a plain-text draft if the user asks for one.
+2. Read `integrations.issue_tracker` from `qua_project_get()`. If its status is not `connected` or it has no `project` key, say so and suggest `/qua:init`. You may output the draft as text only.
+3. Gather the facts from the user's message: what happened, expected result, steps, environment or stage, evidence. Ask one short question for anything essential that is missing. Do not invent steps, versions or results.
+4. Draft the bug exactly as the conventions describe: summary shape, description template, fields, labels, components and priority from the ladder. Use the tracker project key from project data.
+5. Print the full draft: summary, description, and every field value.
+6. Ask: "Create this in the issue tracker?" Wait for the answer.
+   - Yes: create the issue through the issue tracker tools you have (the saved `provider`), then print the issue key and URL.
+   - Changes requested: redraft and ask again.
+   - No: stop. Create nothing.

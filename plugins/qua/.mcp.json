@@ -1,0 +1,5 @@
+{
+  "mcpServers": {
+    "qua": { "command": "qua", "args": ["mcp", "--agent", "claude"] }
+  }
+}
