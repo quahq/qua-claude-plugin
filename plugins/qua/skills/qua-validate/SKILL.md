@@ -19,7 +19,7 @@ Validate one ticket live. The text after the command is the ticket key or URL, f
 1. Read the ticket through the issue tracker tools you have (`integrations.issue_tracker`). If you cannot read it, say so and stop.
 2. Derive numbered repro steps from the summary, description and comments: the starting page, the actions, the expected and the actual result. If the steps are ambiguous, ask one question.
 3. Choose the stage: the one the ticket names, if it matches a key in `stages`; otherwise omit `stage` to use `app_url`.
-4. Reproduce it on a new session name such as `validate-<ticket>-<HHMM>`. Run each action with `do(action, session, agent, stage?)`: one browser action per call, assertions as separate steps. `agent` is your own harness name: `claude` or `cursor`. Pass `stage` only on the first call. Follow the `qua` skill for review results and errors.
+4. Reproduce it on a new session name such as `validate-<ticket>-<HHMM>`. Run each action with `do(action, session, stage?)`: one browser action per call, assertions as separate steps. Pass `stage` only on the first call. Follow the `qua` skill for review results and errors.
 5. Report in chat:
    - Verdict: `reproduced` (the bug happens), `not reproduced` (the expected behavior holds), or `blocked` (you could not reach the point of the check: access, data, environment, a failed step you cannot explain).
    - Evidence: the steps you ran, each step's status, the observed result against the expected one, and the session name.

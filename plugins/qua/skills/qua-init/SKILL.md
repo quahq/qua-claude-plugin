@@ -7,7 +7,7 @@ description: Set up Qua for this project (app URL, stages, integrations by categ
 
 Set up the project data Qua needs. Follow the steps in order and do not skip ahead.
 
-This plugin was built for qua v1.0.0-dev.1.
+This plugin was built for qua v1.0.0-dev.2.
 
 ## Rules
 
@@ -19,7 +19,7 @@ This plugin was built for qua v1.0.0-dev.1.
 
 ## 0. Gate: the qua binary
 
-Do this before anything else. Until it passes, do nothing else: no questions about the project, no saves, no files. Your agent is `cursor`.
+Do this before anything else. Until it passes, do nothing else: no questions about the project, no saves, no files. Your agent is `claude` or `cursor`: the `agent:` line of `qua_project_get`; while Qua tools are missing, you know it from the app you run in (Claude Code or Cursor).
 
 **No Qua tools available** (no `qua_project_get` or `do` among your tools):
 1. Run `command -v qua` in your shell.
@@ -28,22 +28,29 @@ Do this before anything else. Until it passes, do nothing else: no questions abo
    - Make sure `$HOME/go/bin` is on `PATH`. On macOS a GUI-launched agent often does not inherit the shell `PATH`: add `$HOME/go/bin` to `PATH` for login apps, symlink `qua` into a directory GUI apps search (for example `/opt/homebrew/bin`), or start the agent from a terminal where `command -v qua` succeeds.
    - GitHub Releases with prebuilt binaries are planned; there is no download link yet.
    Afterwards ask the user to reload the agent and run /qua-init again, then stop.
-3. Found: the binary is installed but this project or agent is not set up. Offer `qua init --agents cursor` and run it only after a yes. For Cursor also offer `qua patch`, then the user must reload the Agents Window. Running `qua patch` may be blocked by macOS for you: if it fails, ask the user to run it in their own terminal. Afterwards ask the user to reload the agent and run /qua-init again, then stop.
-4. Plugin install without `qua init`: in Cursor open Settings, Plugins, Add, From GitHub Repository, enter `realdnchka/qua-claude-plugin` and choose `qua-cursor`, then fully restart Cursor (Cmd+Q) so it loads the plugin.
+3. Found: the binary is installed but this project or agent is not set up. Offer `qua init --agents <agent>` and run it only after a yes. If your agent is `cursor`, also offer `qua patch`, then the user must reload the Agents Window. Running `qua patch` may be blocked by macOS for you: if it fails, ask the user to run it in their own terminal. Afterwards ask the user to reload the agent and run /qua-init again, then stop.
+4. Plugin install without `qua init` (`qua init` writes the same into `.claude/settings.json` for Claude Code):
+   - Claude Code: the user runs these.
+     ```
+     /plugin marketplace add realdnchka/qua-claude-plugin
+     /plugin install qua@qua
+     ```
+     `/plugin install` opens the plugin panel, where the user confirms the install.
+   - Cursor imports Claude plugins: in Settings, Plugins, add the marketplace `realdnchka/qua-claude-plugin` and install `qua`, then fully restart Cursor (Cmd+Q).
 
 **Qua tools available:** call `qua_project_get()` and read `qua_version`. Compare only release versions (`vX.Y.Z`, optionally `-dev.N`): skip the check if either side is `dev`, a Go pseudo-version (`v0.0.0-…`) or ends in `+dirty`. If they differ, tell the user which side is older and how to upgrade it, then ask whether to continue anyway:
-- plugin older: in Cursor remove `qua-cursor`, add it again from Settings, Plugins, then restart Cursor; Cursor may keep the copy pinned at first install;
+- plugin older: Claude Code: run `/plugin marketplace update qua`, then reload; Cursor: remove the `qua` plugin, add it again from Settings, Plugins, then restart Cursor (it may keep the copy pinned at first install);
 - binary older: run `go install github.com/realdnchka/qua-cli/cmd/qua@latest` and reload the agent.
 
 Stop unless the versions match or the user says to continue.
 
-**Binary not initialized:** in the same `qua_project_get()` output, read `initialized` and `agents`. If `initialized` is false, or `cursor` is not in `agents`, `qua init` was never run here, even though the Qua tools respond (a global provider can serve them). Tell the user, then:
-1. Give this command in a code block:
+**Binary not initialized:** in the same `qua_project_get()` output, read `initialized` and `agents`. If `initialized` is false, or the `agent:` value is not in `agents`, `qua init` was never run here, even though the Qua tools respond. Tell the user, then:
+1. Give this command in a code block, with `<agent>` replaced by the `agent:` value:
    ```sh
-   qua init --agents cursor
+   qua init --agents <agent>
    ```
 2. Offer to run it in the project root; run it only after an explicit yes.
-3. Say that Cursor may additionally need `qua patch` and a reload of the Agents Window.
+3. If the agent is `cursor`, say that Cursor may additionally need `qua patch`, a reload of the Agents Window and a Cursor restart (the hook in `~/.cursor/hooks.json`).
 4. Stop. Do not start step 1 until the user runs /qua-init again.
 
 ## 1. Project data

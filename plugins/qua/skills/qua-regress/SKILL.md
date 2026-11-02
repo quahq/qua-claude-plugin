@@ -20,7 +20,7 @@ Run saved suites and summarize. The text after the command is an optional stage 
 2. Choose suites:
    - With a stage argument: it must be a key in `stages`, otherwise list the configured keys and stop. Keep only suites whose `.qua/<suite>/suite.yaml` lists that stage under `stages`. Suites with no `suite.yaml` are excluded. If no suite matches, say so and run nothing.
    - Without an argument: keep every suite, tagged or not. Do not pass `stage`.
-3. For each chosen suite call `run(suite, session, agent, stage?)`. `session` is a fresh name such as `regress-<suite>-<YYYYMMDD-HHMM>`. `agent` is your own harness name: `claude` or `cursor`. Pass `stage` only when the user gave one. Run suites one after another.
+3. For each chosen suite call `run(suite, session, stage?)`. `session` is a fresh name such as `regress-<suite>-<YYYYMMDD-HHMM>`. Pass `stage` only when the user gave one. Run suites one after another.
 4. Summarize:
    - A table with one row per case: suite, case, status (`passed`, `failed` or `review`).
    - For each `failed` case: the step and the reason.

@@ -17,15 +17,15 @@ Change project data only with `qua_project_set`; never edit `.qua/project.yaml`.
 - Omit `browser` to use the default browser.
 - Pass `browser` only when the user explicitly asks for one, and only if the
   instructions list it as configured. Otherwise say it is not configured for
-  Claude and suggest `qua init`. Do not improvise with another tool.
-- Always pass `agent: "claude"`.
-- If the instructions say Qua is not configured, tell the user to run
-  `/qua:init`.
+  this agent and suggest `qua init`. Do not improvise with another tool.
+- Omit `agent`; the server uses the agent it runs under. Your agent is the
+  `agent:` line of `qua_project_get`.
+- If the instructions say Qua is not configured, tell the user to run `/qua-init`.
 
 ## Tools
 
-- `do(action, session, agent, browser?, stage?, target?)` — perform one prose step.
-- `run(suite, session, agent, case?, browser?, stage?)` — run a saved case, or every case in a suite.
+- `do(action, session, browser?, stage?, target?)` — perform one prose step.
+- `run(suite, session, case?, browser?, stage?)` — run a saved case, or every case in a suite.
 - `case_write(suite, name, steps)` — save `.qua/{suite}/{name}.md`.
 - `qua_session_list()` — list existing sessions.
 - `qua_session_close(session)` — only when the user asks to clean up.
@@ -73,13 +73,20 @@ Each step returns `status`, `reason` and `prose`.
   silently edit the case.
 
 ## Errors (the tool call itself fails)
+
+- Cursor only (`agent: cursor`): bridge unavailable, wrong host or version →
+  ask the user to run `qua patch` and reload the Agents Window, then retry.
+  Session lost its tab twice → ask the user to reload the Agents Window, then
+  reuse the same session name.
 - Playwright endpoint missing or unreachable → ask the user to start the
   browser server or set the endpoint with `qua init`.
 - Not logged in or token rejected → ask the user to run `qua login`.
 - Qua MCP is not connected → stop and ask the user to fix MCP
-  (check `/mcp` in Claude Code). Do not fall back to the `qua` CLI.
+  (Claude Code: check `/mcp`; Cursor: check Settings, MCP). Do not fall back to the `qua` CLI.
 
 ## Never
+
+- Cursor only (`agent: cursor`): never call these Cursor browser tools: `browser_navigate`, `browser_tabs`, `browser_click`, `browser_type`, `browser_fill`, `browser_snapshot`, `browser_take_screenshot`.
 - Never inspect the DOM, pass selectors or page snapshots to qua.
 - Never edit `.qua/browser_sessions.json` or other files under `.qua/` except
   through `case_write` and the files a `/qua` command tells you to write
@@ -90,5 +97,5 @@ Each step returns `status`, `reason` and `prose`.
 ## Stages
 
 Pass `stage: "<key>"` only when the user names a stage; keys are in the
-instructions. It applies when the session is new; Playwright navigates the borrowed page there only when `stage` is passed.
+instructions. It applies when the session is new; in Cursor the tab opens there; Playwright navigates the borrowed page there only when `stage` is passed.
 To switch stages, start a new session name.

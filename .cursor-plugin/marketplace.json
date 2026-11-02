@@ -1,8 +1,0 @@
-{
-  "name": "qua",
-  "description": "Qua harness for coding agents",
-  "owner": { "name": "Qua" },
-  "plugins": [
-    { "name": "qua-cursor", "source": "./plugins/qua-cursor", "description": "Prose-driven browser QA through Qua MCP, for Cursor" }
-  ]
-}
