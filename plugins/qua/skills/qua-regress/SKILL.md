@@ -24,6 +24,8 @@ Run saved suites and summarize. The text after the command is an optional stage 
 4. Summarize:
    - A table with one row per case: suite, case, status (`passed`, `failed` or `review`).
    - For each `failed` case: the step and the reason.
+   - For each `failed` or `review` case: the `screenshot:` path from the stopped step's result.
+   - For each `failed` case also call `qua_session_logs` with `kind` error and `tail` 20 and add the one or two most relevant lines next to the step and reason.
    - For each `review` case: the step and its `candidates` (`map_id`, role, name). Do not pick a candidate yourself.
    - The log paths under `.qua/runs/` when the results give them.
    - Totals: passed, failed, review.

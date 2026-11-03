@@ -7,7 +7,7 @@ description: Set up Qua for this project (app URL, stages, integrations by categ
 
 Set up the project data Qua needs. Follow the steps in order and do not skip ahead.
 
-This plugin was built for qua v1.0.0.
+This plugin was built for qua v1.2.0.
 
 ## Rules
 
@@ -61,7 +61,19 @@ Ask for:
 
 Save them in one `qua_project_set` call: `app_url`, `stages` (the whole map), `qua_env`.
 
-## 2. Probe integrations
+## 2. Browser
+
+Call `qua_browser_detect()`. If your agent has no Playwright browser (the call says so), skip this step.
+
+Check `runtime:` first. If the Playwright runtime is missing, explain that Qua needs it to drive the browser, ask the user, and on yes call `qua_browser_install()`. If Node is missing, tell the user to install Node.js 18+ and stop this step. Then continue with the endpoint:
+
+- `endpoint:` is set: tell the user which browser Qua will attach to (`source:`); each qua session opens its own window there.
+- `endpoint: none`: show the setup steps from the result. Offer to start a shared browser: ask which engine (`chromium` by default, or `firefox`, `webkit`; the first start downloads it), and on yes call `qua_browser_start(engine?, profile?)` (persistent profile for your agent; `profile: false` for a clean throwaway one). Tell the user the endpoint. Qua never starts a browser otherwise and never stops one; the user or you (`qua_browser_stop`, on request) do. Windows Qua did not open are never closed.
+- A `warning:` line about an `endpoint` in config.yaml: tell the user it is ignored; Qua finds the browser itself.
+
+Continue to the next step either way.
+
+## 3. Probe integrations
 
 Integrations are probed by category. Qua is required; the rest are optional. For each category, identify the provider from the tools you have, confirm it with the user, run one cheap read-only probe, and record the result. Tool names differ per server, so pick the tool that does the job.
 
@@ -86,7 +98,7 @@ If the Qua probe fails, stop and tell the user to run `qua login`.
 
 Every other MCP server you have (for example Figma or Slack) that fits no category: save its lowercase name in `other` through `qua_project_set` (send the whole list). Do not call any of its tools.
 
-## 3. Category keys
+## 4. Category keys
 
 For each category that is `connected`, ask for its keys and check you can read them through the provider's tools. Save them under `integrations.<category>.keys`, keeping the existing `provider` and `status`:
 
@@ -97,7 +109,7 @@ For each category that is `connected`, ask for its keys and check you can read t
 
 No other keys are accepted. Skip silently any category that is not `connected`; if none is, skip this step.
 
-## 4. Bug-report conventions
+## 5. Bug-report conventions
 
 Target file: `.qua/conventions/bug-report.md`. The conventions come from the issue tracker, whatever the provider.
 
@@ -131,14 +143,14 @@ Draft the file in exactly this shape. Keep every heading, in this order. Use the
 
 Show the full draft in chat and ask whether to save it. Write the file only after an explicit yes. If the user asks for edits, redraft and ask again. If the user declines, write nothing and offer to redraft.
 
-## 5. Test-case conventions
+## 6. Test-case conventions
 
 Target file: `.qua/conventions/test-case.md`.
 
 - If `test_management` is `connected`: read existing cases (about 20) from the saved project and suite and derive the title shape, sections, preconditions, steps and expected results, type, priority and references.
 - Otherwise ask the user for one example test case.
 
-Use this shape, same rules as step 4 (`source=<provider>` of the test management tool, or `source=example`):
+Use this shape, same rules as step 5 (`source=<provider>` of the test management tool, or `source=example`):
 
 ```markdown
 <!-- qua:conventions source=<provider|example> generated=YYYY-MM-DD -->
@@ -156,7 +168,7 @@ Use this shape, same rules as step 4 (`source=<provider>` of the test management
 
 Show the draft, then write only after an explicit yes.
 
-## 6. Suite stage tags
+## 7. Suite stage tags
 
 List the suite directories in `.qua/` (directories holding case `*.md` files; skip `conventions` and `runs`). If there are any, offer to tag suites with the stages they apply to. For each suite the user agrees to, write `.qua/<suite>/suite.yaml`:
 

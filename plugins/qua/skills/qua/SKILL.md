@@ -28,19 +28,48 @@ Change project data only with `qua_project_set`; never edit `.qua/project.yaml`.
 - `run(suite, session, case?, browser?, stage?)` — run a saved case, or every case in a suite.
 - `case_write(suite, name, steps)` — save `.qua/{suite}/{name}.md`.
 - `qua_session_list()` — list existing sessions.
+- `qua_session_logs(session, tail?, kind?)` — console, page errors, failed requests and Qua errors of a session window (`kind`: console, error, network, all).
+- `qua_session_screenshot(session, full_page?, label?)` — capture the session window now; returns the saved path (`.qua/screenshots/<session>/`) and the image. Cursor tabs need the Agents Window visible (not minimized).
 - `qua_session_close(session)` — only when the user asks to clean up.
 - `qua_project_get()` — read project data and whether it is configured.
 - `qua_project_set(app_url?, stages?, qua_env?, integrations?, other?)` — merge a patch into project data.
+- `qua_browser_detect()` — which Playwright browser a call would attach to, and setup steps when none.
+- `qua_browser_install()` — install the Playwright runtime; only after the user says yes.
+- `qua_browser_start(engine?, profile?)` — start a detached browser you and the user share, or reuse the running one; only after the user says yes.
+- `qua_browser_stop(engine?)` — stop the browsers Qua started; only when the user asks.
 - `init`, `login` — only when the user explicitly asks; both change setup.
+
+## Playwright browser
+
+Qua attaches to a running browser. It starts one only through `qua_browser_start`, never during a step.
+A running Qua browser or a Chromium with remote debugging on is found automatically,
+so omit `endpoint`; pass it only when the user gives one (a CDP address, or the
+`qua+tcp://` address a Qua host printed). Engines: `chromium` (default), `firefox`,
+`webkit`. A session stays on the browser it first used.
+Each qua session is one window of the shared browser, with the profile's logins.
+If you drive the same Chromium with your own Playwright MCP, attach it
+to that endpoint (`--cdp-endpoint <endpoint>`); it sees each qua window as a page.
+Never close windows you did not open.
+
+No browser found → ask the user; on yes call `qua_browser_start` (`engine` for
+firefox or webkit; the first start downloads it). It uses your agent's persistent
+profile (logins survive); pass `profile: false` for a clean throwaway one.
+Qua never stops a browser by itself; call `qua_browser_stop` only when the user asks.
+
+If a tool says the Playwright runtime is missing, ask the user; on yes call
+`qua_browser_install`. Never install or start a browser without the user.
 
 ## Sessions
 
+- A session is one browser window. The first `do` or `run` with a new name opens it; there is no open call.
 - `do`: pick one name per task (for example `signup-flow`) and reuse it for
-  every step. The first `do` opens the browser; later calls continue on the
-  same page.
+  every step; later calls continue on the same page.
 - `run`: always a fresh name, for example `smoke-login-20261102-1405`. Names
   already listed by `qua_session_list` are rejected.
-- Never close and reopen a session to recover from an error.
+- If the result ends with "previous window was gone", the page state was lost:
+  redo the steps that led to the page. Do not close and reopen the session.
+- Sessions unused for a day are closed by Qua; sessions whose window or browser is gone are dropped.
+- Debug a failing page with `qua_session_logs`: console errors, thrown errors, failed requests.
 
 ## Writing steps
 
@@ -72,14 +101,19 @@ Each step returns `status`, `reason` and `prose`.
 - `failed` — report the step and reason to the user. Do not change the app or
   silently edit the case.
 
+A `failed` or `review` result also has a `screenshot:`
+path of the session window at that moment (Cursor: Agents Window must be visible). Show it to the user when you report
+the step. If it says `note: screenshot not captured`, the step status still stands.
+
 ## Errors (the tool call itself fails)
 
 - Cursor only (`agent: cursor`): bridge unavailable, wrong host or version →
   ask the user to run `qua patch` and reload the Agents Window, then retry.
   Session lost its tab twice → ask the user to reload the Agents Window, then
   reuse the same session name.
-- Playwright endpoint missing or unreachable → ask the user to start the
-  browser server or set the endpoint with `qua init`.
+- No Playwright browser found, or it does not answer → call
+  `qua_browser_detect`, show the user its setup steps, and retry after they
+  start a browser. Offer `qua_browser_start`; call it only after the user says yes.
 - Not logged in or token rejected → ask the user to run `qua login`.
 - Qua MCP is not connected → stop and ask the user to fix MCP
   (Claude Code: check `/mcp`; Cursor: check Settings, MCP). Do not fall back to the `qua` CLI.
@@ -97,5 +131,5 @@ Each step returns `status`, `reason` and `prose`.
 ## Stages
 
 Pass `stage: "<key>"` only when the user names a stage; keys are in the
-instructions. It applies when the session is new; in Cursor the tab opens there; Playwright navigates the borrowed page there only when `stage` is passed.
+instructions. It applies when the session is new; in Cursor the tab opens there; Playwright navigates the session's own window there only when `stage` is passed.
 To switch stages, start a new session name.
