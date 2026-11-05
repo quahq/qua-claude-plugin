@@ -7,7 +7,7 @@ description: Set up Qua for this project (app URL, stages, integrations by categ
 
 Set up the project data Qua needs. Follow the steps in order and do not skip ahead.
 
-This plugin was built for qua v1.2.0.
+This plugin was built for qua v1.3.0.
 
 ## Rules
 
@@ -21,7 +21,7 @@ This plugin was built for qua v1.2.0.
 
 Do this before anything else. Until it passes, do nothing else: no questions about the project, no saves, no files. Your agent is `claude` or `cursor`: the `agent:` line of `qua_project_get`; while Qua tools are missing, you know it from the app you run in (Claude Code or Cursor).
 
-**No Qua tools available** (no `qua_project_get` or `do` among your tools):
+**No Qua tools available** (no `qua_project_get` or `qua_do` among your tools):
 1. Run `command -v qua` in your shell.
 2. Not found: the binary is not installed. Show these steps and offer to run them; run them only after an explicit yes.
    - `curl -fsSL https://dl.qua.0xdc.sh/install.sh | sh`
@@ -52,6 +52,16 @@ Stop unless the versions match or the user says to continue.
 3. If the agent is `cursor`, say that Cursor may additionally need `qua patch`, a reload of the Agents Window and a Cursor restart (the hook in `~/.cursor/hooks.json`).
 4. Stop. Do not start step 1 until the user runs /qua-init again.
 
+## Form: hosts that render MCP Apps
+
+Right after step 0 passes, list every MCP server you have, Qua included, each with a category guess: `qua`, `source_control`, `issue_tracker`, `test_management`, `knowledge_base` or `other`, a lowercase `provider` when you know it (for example `jira`, `github`), and `status` `unprobed` unless you already probed it. Call `qua_project_configure` with `mcps` set to that list. Do not call any tool of those servers yet.
+
+- The result starts with `widget: offered`: the host may still not render it (Cursor's Agents Window does not). Ask in one line: "If you see the setup form, fill it in; if not, say so and we continue here." Do not ask the step 1 questions yet. When the user answers:
+  - It lists `qua_project_set` or `qua_browser_set` arguments because the form could not save: call each with exactly those arguments.
+  - Then continue with step 2 (browser), step 3 only for the categories the message names as still to probe (skip `other`, the form saved it), and steps 4 to 7.
+  - If the user says there is no form, follow the text steps from step 1.
+- The result starts with `widget: not shown`: the text holds the same data; follow the steps below from step 1.
+
 ## 1. Project data
 
 Ask for:
@@ -62,6 +72,10 @@ Ask for:
 Save them in one `qua_project_set` call: `app_url`, `stages` (the whole map), `qua_env`.
 
 ## 2. Browser
+
+Your agent's browsers are in `.qua/config.yaml`, default first: `ide` (the Qua app browser; it needs the Qua app open on this project), `playwright`, `cursor` (Cursor bridge). To change them, ask the user which ones and the default, and on yes call `qua_browser_set(agent, browsers)` (the form does this on Save).
+
+If your agent's default is `ide`, tell the user sessions open in the Qua app; skip the rest of this step unless it also has `playwright`.
 
 Call `qua_browser_detect()`. If your agent has no Playwright browser (the call says so), skip this step.
 
@@ -75,7 +89,7 @@ Continue to the next step either way.
 
 ## 3. Probe integrations
 
-Integrations are probed by category. Qua is required; the rest are optional. For each category, identify the provider from the tools you have, confirm it with the user, run one cheap read-only probe, and record the result. Tool names differ per server, so pick the tool that does the job.
+Integrations are probed by category. Qua is required and needs no confirmation; the rest are optional. For the optional categories, show your provider guesses in one list and ask once to confirm or change them. A provider picked in the form or already saved counts as confirmed: say so, then probe. Run one cheap read-only probe per category, say what you probed (repo, user, space), and record the result. Tool names differ per server, so pick the tool that does the job.
 
 | Category (name) | Providers, for example | Probe |
 |---|---|---|
@@ -85,7 +99,7 @@ Integrations are probed by category. Qua is required; the rest are optional. For
 | Test management (`test_management`) | TestRail, Zephyr, Xray, Qase | list projects |
 | Knowledge base (`knowledge_base`) | Confluence, Notion | search one space |
 
-One provider per category. If several fit, ask the user which one to use. Do not probe until the user confirms the provider.
+One provider per category. If several fit, ask the user which one to use. Never call an optional provider's tool before it is confirmed.
 
 Save each result with `qua_project_set` as `integrations: {<category>: {provider: "<provider>", status: "<status>"}}`. `provider` is free text: lowercase, for example `jira`, `linear`, `testrail`.
 

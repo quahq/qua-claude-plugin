@@ -24,20 +24,28 @@ Change project data only with `qua_project_set`; never edit `.qua/project.yaml`.
 
 ## Tools
 
-- `do(action, session, browser?, stage?, target?)` — perform one prose step.
-- `run(suite, session, case?, browser?, stage?)` — run a saved case, or every case in a suite.
-- `case_write(suite, name, steps)` — save `.qua/{suite}/{name}.md`.
+- `qua_do(action, session, browser?, stage?, target?)` — perform one prose step.
+- `qua_run(suite, session, case?, browser?, stage?)` — run a saved case, or every case in a suite.
+- `qua_explore(session, start?, stage?, max_steps?, max_depth?, max_minutes?, origins?, allow_submit?, browser?)` — walk links, buttons and tabs within limits, grow the UI map, return a report; never `allow_submit` without the user's yes.
+- `qua_review_pick(session, timeout_s?)` — after a `review` step whose result says `review: shown in the window`, wait for the user's pick in the overlay; returns a `map_id` to pass as `target`.
+- `qua_record(action, session?, case?)` — `start`, `stop` or `status` of a recording of the user's manual actions in a session window; with `case` the steps are appended to that case on stop.
+- `qua_case_write(suite, name, steps)` — save `.qua/{suite}/{name}.md`.
+- `qua_case_list(suite?)`, `qua_case_get(suite, name)` — read saved cases as JSON.
+- `qua_run_list(suite?, status?, limit?, cursor?)`, `qua_run_get(id)` — past case runs as JSON, newest first; `qua_run_get` has each step's status, Jev judgments and screenshots.
+- `qua_map_get(page?, session?)`, `qua_map_state(fp)` — the UI map as JSON: without `page` a page summary, with it the page's states and edges.
 - `qua_session_list()` — list existing sessions.
 - `qua_session_logs(session, tail?, kind?)` — console, page errors, failed requests and Qua errors of a session window (`kind`: console, error, network, all).
 - `qua_session_screenshot(session, full_page?, label?)` — capture the session window now; returns the saved path (`.qua/screenshots/<session>/`) and the image. Cursor tabs need the Agents Window visible (not minimized).
 - `qua_session_close(session)` — only when the user asks to clean up.
 - `qua_project_get()` — read project data and whether it is configured.
 - `qua_project_set(app_url?, stages?, qua_env?, integrations?, other?)` — merge a patch into project data.
+- `qua_project_configure(mcps?)` — project, browser and your MCP servers as text and a setup form; used by /qua-init.
+- `qua_ui_probe(echo?)` — diagnostic MCP Apps widget; only when the user asks to test widgets.
 - `qua_browser_detect()` — which Playwright browser a call would attach to, and setup steps when none.
 - `qua_browser_install()` — install the Playwright runtime; only after the user says yes.
 - `qua_browser_start(engine?, profile?)` — start a detached browser you and the user share, or reuse the running one; only after the user says yes.
 - `qua_browser_stop(engine?)` — stop the browsers Qua started; only when the user asks.
-- `init`, `login` — only when the user explicitly asks; both change setup.
+- `qua_init`, `qua_login` — only when the user explicitly asks; both change setup.
 
 ## Playwright browser
 
@@ -61,10 +69,10 @@ If a tool says the Playwright runtime is missing, ask the user; on yes call
 
 ## Sessions
 
-- A session is one browser window. The first `do` or `run` with a new name opens it; there is no open call.
-- `do`: pick one name per task (for example `signup-flow`) and reuse it for
+- A session is one browser window. The first `qua_do` or `qua_run` with a new name opens it; there is no open call.
+- `qua_do`: pick one name per task (for example `signup-flow`) and reuse it for
   every step; later calls continue on the same page.
-- `run`: always a fresh name, for example `smoke-login-20261102-1405`. Names
+- `qua_run`: always a fresh name, for example `smoke-login-20261102-1405`. Names
   already listed by `qua_session_list` are rejected.
 - If the result ends with "previous window was gone", the page state was lost:
   redo the steps that led to the page. Do not close and reopen the session.
@@ -79,8 +87,8 @@ If a tool says the Playwright runtime is missing, ask the user; on yes call
 
 ## Saving cases
 
-Call `case_write` when the user asks to save, or after they confirm a sequence
-you executed with `do`. One step per array item. The same suite and name
+Call `qua_case_write` when the user asks to save, or after they confirm a sequence
+you executed with `qua_do`. One step per array item. The same suite and name
 overwrite the file.
 
 ## Reading results
@@ -91,12 +99,16 @@ Each step returns `status`, `reason` and `prose`.
 - `review` — qua was not sure and did **not** perform the step. The result
   lists `candidates` (best first: `map_id`, role, name, region, score) and
   likely `actions`. Then:
-  1. If exactly one candidate clearly matches what the user meant, call `do`
+  1. If exactly one candidate clearly matches what the user meant, call `qua_do`
      again with the same `action`, same `session` and `target: "<map_id>"`.
   2. Otherwise rephrase the step to name the element more precisely and
      retry once, or show the candidates to the user and ask which one.
   Never pick a candidate just because it has the highest score.
-- In a `run`, a `review` step stops that case; later cases still run. Report
+  3. If the result says `review: shown in the window` and the user is
+     watching it, ask them to pick there and call `qua_review_pick` with the
+     session (default wait 60 s); on `picked: <map_id>` re-issue `qua_do` with
+     that `target`. On a cancel or a timeout, fall back to step 1 or 2.
+- In a `qua_run`, a `review` step stops that case; later cases still run. Report
   the stopped case with its candidates.
 - `failed` — report the step and reason to the user. Do not change the app or
   silently edit the case.
@@ -123,7 +135,7 @@ the step. If it says `note: screenshot not captured`, the step status still stan
 - Cursor only (`agent: cursor`): never call these Cursor browser tools: `browser_navigate`, `browser_tabs`, `browser_click`, `browser_type`, `browser_fill`, `browser_snapshot`, `browser_take_screenshot`.
 - Never inspect the DOM, pass selectors or page snapshots to qua.
 - Never edit `.qua/browser_sessions.json` or other files under `.qua/` except
-  through `case_write` and the files a `/qua` command tells you to write
+  through `qua_case_write` and the files a `/qua` command tells you to write
   (`.qua/conventions/*.md`, `.qua/<suite>/suite.yaml`).
 - Never ask for or store secrets; `qua login` is run by the user.
 - Never run the `qua` CLI during a normal turn; it is for humans.
