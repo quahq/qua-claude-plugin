@@ -1,0 +1,27 @@
+---
+name: qua-explore
+description: Explore the app with Qua to map its pages, dialogs and links, then summarize what was found and offer to save flows as cases. Use when the user asks to explore, crawl or map the app or a section of it, or when /qua-explore is run.
+---
+
+# /qua-explore
+
+Walk the app's controls and grow the UI map. The text after the command is an optional start URL or stage key, for example `qa` or `https://app.example/settings`.
+
+## Rules
+
+- If Qua tools are missing, stop and point the user to /qua-init.
+- Call `qua_project_get()` first. If `configured` is false, stop and tell the user to run `/qua-init`.
+- Never pass `allow_submit` on your own. Explore clicks only links, buttons and tabs and skips controls the worker rates as destructive. Submitting forms creates data in the app: ask the user first, name the stage, and pass `allow_submit` only after an explicit yes.
+- Prefer a non-production stage. If the only target is production, say so and ask before starting.
+- Never click skipped or `needs_human` controls yourself to "finish the job". Never edit `.qua/project.yaml`.
+
+## Steps
+
+1. Choose the target: a stage key from `stages` goes to `stage`, a URL to `start`, nothing means the session's current page or `app_url`. Keep the default limits unless the user gave others (`max_steps`, `max_depth`, `max_minutes`, `origins`).
+2. Call `qua_explore(session, start?, stage?, max_steps?, max_depth?, max_minutes?, origins?, allow_submit?)` with a session name such as `explore-<HHMM>`. It can take minutes; do not call `qua_do` on the same session meanwhile.
+3. Summarize the report in chat:
+   - Why it stopped (frontier exhausted or a limit) and the step count.
+   - Pages and states found, and the main navigation edges in plain words; `qua_map_get(page?)` and `qua_map_state(fp)` read the map for details.
+   - Skipped as destructive and `needs_human` controls, with the page each is on. Ask whether any should be explored by hand; do not act on them.
+   - Form submits skipped for lack of `allow_submit`, external links, and errors.
+4. Offer, but do not do, the next steps: raise the limits or explore a section deeper, rerun with `allow_submit` after a yes, or save a found flow with `qua_case_write` (one prose action per step) after the user confirms the steps.

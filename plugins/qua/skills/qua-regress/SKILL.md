@@ -16,14 +16,16 @@ Run saved suites and summarize. The text after the command is an optional stage 
 
 ## Steps
 
-1. List the suite directories in `.qua/` that hold case `*.md` files. Skip `conventions` and `runs`.
+1. Call `qua_case_list()` and take the suites of its cases.
 2. Choose suites:
    - With a stage argument: it must be a key in `stages`, otherwise list the configured keys and stop. Keep only suites whose `.qua/<suite>/suite.yaml` lists that stage under `stages`. Suites with no `suite.yaml` are excluded. If no suite matches, say so and run nothing.
    - Without an argument: keep every suite, tagged or not. Do not pass `stage`.
-3. For each chosen suite call `run(suite, session, stage?)`. `session` is a fresh name such as `regress-<suite>-<YYYYMMDD-HHMM>`. Pass `stage` only when the user gave one. Run suites one after another.
+3. For each chosen suite call `qua_run(suite, session, stage?)`. `session` is a fresh name such as `regress-<suite>-<YYYYMMDD-HHMM>`. Pass `stage` only when the user gave one. Run suites one after another.
 4. Summarize:
    - A table with one row per case: suite, case, status (`passed`, `failed` or `review`).
    - For each `failed` case: the step and the reason.
+   - For each `failed` or `review` case: the `screenshot:` path from the stopped step's result.
+   - For each `failed` case also call `qua_session_logs` with `kind` error and `tail` 20 and add the one or two most relevant lines next to the step and reason.
    - For each `review` case: the step and its `candidates` (`map_id`, role, name). Do not pick a candidate yourself.
-   - The log paths under `.qua/runs/` when the results give them.
+   - The log paths under `.qua/runs/` when the results give them. For a step's Jev judgments call `qua_run_get(id)` with an id from `qua_run_list(suite)`.
    - Totals: passed, failed, review.

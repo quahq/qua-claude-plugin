@@ -19,6 +19,9 @@ Turn what the user describes into a bug report that follows the project's conven
 1. Read `.qua/conventions/bug-report.md`. If it does not exist, say so, suggest `/qua-init`, and stop. You may still print a plain-text draft if the user asks for one.
 2. Read `integrations.issue_tracker` from `qua_project_get()`. If its status is not `connected` or it has no `project` key, say so and suggest `/qua-init`. You may output the draft as text only.
 3. Gather the facts from the user's message: what happened, expected result, steps, environment or stage, evidence. Ask one short question for anything essential that is missing. Do not invent steps, versions or results.
+   - If the bug was seen in a Qua session (the user names one, or one was just used here), call `qua_session_logs` with `kind` error and with `kind` network, and offer the relevant lines as evidence in the draft. Ask which session if unclear.
+   - Same session: offer its latest `screenshot:` path from a step result, or take one with `qua_session_screenshot` with `session` and `label` `bug`, as evidence. Attach it to the issue only if the issue tracker tools support attachments; otherwise give the path.
+   - Never include tokens, cookies or auth headers from logs.
 4. Draft the bug exactly as the conventions describe: summary shape, description template, fields, labels, components and priority from the ladder. Use the tracker project key from project data.
 5. Print the full draft: summary, description, and every field value.
 6. Ask: "Create this in the issue tracker?" Wait for the answer.
