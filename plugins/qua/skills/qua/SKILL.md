@@ -33,7 +33,7 @@ Change project data only with `qua_project_set`; never edit `.qua/project.yaml`.
 - `qua_case_list(suite?)`, `qua_case_get(suite, name)` — read saved cases as JSON.
 - `qua_case_resolved(suite, case)` — a case's resolved-step lock (`.qua/resolved/`) as JSON: per line `resolved`, `stale` and the locked action and target.
 - `qua_run_list(suite?, status?, limit?, cursor?)`, `qua_run_get(id)` — past case runs as JSON, newest first; `qua_run_get` has each step's status, Jev judgments and screenshots.
-- `qua_map_get(page?, session?)`, `qua_map_state(fp)` — the UI map as JSON: without `page` a page summary, with it the page's states and edges.
+- `qua_map_get(page?, session?)`, `qua_map_state(fp)` — the UI map as JSON: without `page` a page summary, with it the page's states and edges; a `note` asks to relearn an old map.
 - `qua_session_list()` — list existing sessions.
 - `qua_session_logs(session, tail?, kind?)` — console, page errors, failed requests and Qua errors of a session window (`kind`: console, error, network, all).
 - `qua_session_screenshot(session, full_page?, label?)` — capture the session window now; returns the saved path (`.qua/screenshots/<session>/`) and the image. Cursor tabs need the Agents Window visible (not minimized).
