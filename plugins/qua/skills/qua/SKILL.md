@@ -28,9 +28,10 @@ Change project data only with `qua_project_set`; never edit `.qua/project.yaml`.
 - `qua_run(suite, session, case?, browser?, stage?)` — run a saved case, or every case in a suite.
 - `qua_explore(session, start?, stage?, max_steps?, max_depth?, max_minutes?, origins?, allow_submit?, browser?)` — walk links, buttons and tabs within limits, grow the UI map, return a report; never `allow_submit` without the user's yes.
 - `qua_review_pick(session, timeout_s?)` — after a `review` step whose result says `review: shown in the window`, wait for the user's pick in the overlay; returns a `map_id` to pass as `target`.
-- `qua_record(action, session?, case?)` — `start`, `stop` or `status` of a recording of the user's manual actions in a session window; with `case` the steps are appended to that case on stop.
+- `qua_record(action, session?, case?)` — `start`, `stop` or `status` of a recording of the user's manual actions in a session window; with `case` the steps are appended to that case on stop. `learn_start`, `observe` and `learn_stop` learn the map passively while the user browses, without case steps; only pages on the app URL or a stage are mapped.
 - `qua_case_write(suite, name, steps)` — save `.qua/{suite}/{name}.md`.
 - `qua_case_list(suite?)`, `qua_case_get(suite, name)` — read saved cases as JSON.
+- `qua_case_resolved(suite, case)` — a case's resolved-step lock (`.qua/resolved/`) as JSON: per line `resolved`, `stale` and the locked action and target.
 - `qua_run_list(suite?, status?, limit?, cursor?)`, `qua_run_get(id)` — past case runs as JSON, newest first; `qua_run_get` has each step's status, Jev judgments and screenshots.
 - `qua_map_get(page?, session?)`, `qua_map_state(fp)` — the UI map as JSON: without `page` a page summary, with it the page's states and edges.
 - `qua_session_list()` — list existing sessions.
